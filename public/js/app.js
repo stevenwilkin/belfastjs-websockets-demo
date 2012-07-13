@@ -1,38 +1,51 @@
-var Client = (function(){
+var client = {
 
-	var since = null;
+    ws: null,
 
-	function success(text){
+    init: function() {
+        console.log('> init');
+
+        $('#submit').click(client.addComment);
+        $('#comments').mouseover(function(){
+            $(this).data('mouseover', true);
+        });
+        $('#comments').mouseout(function(){
+            $(this).data('mouseover', false);
+        });
+
+        var host = window.document.location.host.replace(/:.*/, '');
+        window.WebSocket = window.WebSocket || window.MozWebSocket;
+        client.ws = new WebSocket('ws://' + host + ':8181');
+
+        client.ws.onmessage = client.display;
+    },
+
+	success: function(text) {
 		$('footer p').removeClass('error').text(text).show().fadeOut(1000);
 		$('#comment').val('');
-	}
+	},
 
-	function error(text){
+	error: function(text) {
 		$('footer p').addClass('error').text(text).show().fadeOut(1000);
-	}
+	},
 
-	function addComment(){
-		var comment = escape($.trim($('#comment').val()));
+	addComment: function() {
+		var comment = $.trim($('#comment').val());
 		if(!comment.length){
-			error('Please enter a comment');
+			client.error('Please enter a comment');
 			return false;
 		}
-		$.ajax({
-			url: '/comments/add/' + comment,
-			success: function(){
-				success('Your comment was submitted');
-			},
-			error: function(){
-				error('Your comment couldn\'t be submitted, please try again');
-			},
-		});
+        client.ws.send(comment);
 		return false;
-	}
+	},
 
-	function display(comments){
-		// exit if poll had timed-out
-		if(!comments)
+	display: function(response) {
+        var comments = JSON.parse(response.data);
+
+		if(!comments) {
 			return;
+        }
+
 		for(i in comments){
 			var
 				c = comments[i],
@@ -48,37 +61,14 @@ var Client = (function(){
 			}
 			var
 				time = t.h + ':' + t.m + ':' + t.s,
-				li = '<li><span>' + time + '</span>' + '<p>' + c.comment + '</p>'  + '</li>';
+				li = '<li><span>' + time + '</span>' + '<p>' + c.content + '</p>'  + '</li>';
 			$('#comments ol').append(li);
 		}
-		since = comments[comments.length - 1].timestamp;
 		// scroll new comment into view if the mouse isn't over the comments list
 		if(!$('#comments').data('mouseover'))
 			$('#comments').scrollTop($('ol').height());	
-		success(comments.length + ' comment(s) retrieved' );
+		client.success(comments.length + ' comment(s) retrieved' );
 	}
+};
 
-	function poll(){
-		$.ajax({
-			url: '/comments' + ((since) ? '/' + since : ''),
-			success: display,
-			complete: poll
-		});
-	}
-
-	return {
-		init: function(){
-			$('#submit').click(addComment);
-			$('#comments').mouseover(function(){
-				$(this).data('mouseover', true);
-			});
-			$('#comments').mouseout(function(){
-				$(this).data('mouseover', false);
-			});
-			poll();
-		}
-	}
-
-})();
-
-//$(Client.init);
+$(client.init);

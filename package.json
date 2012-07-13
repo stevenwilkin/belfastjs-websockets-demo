@@ -2,6 +2,7 @@
 	"name": "belfastjs-websockets",
 	"version": "0.0.0",
 	"dependencies": {
-		"node-static": "0.6.0"
+		"node-static": "0.6.0",
+        "ws": "0.4.19"
 	}
 }
