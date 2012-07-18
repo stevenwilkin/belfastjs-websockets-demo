@@ -1,4 +1,4 @@
-# belfastjs-websockets
+# belfastjs-websockets-demo
 
 A simple WebSockets chat server demo to support [a talk I gave](http://belfastjs-websockets.herokuapp.com) at [BelfastJS](http://belfastjs.org)
 
